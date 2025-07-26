@@ -18,7 +18,7 @@ A secure, beautiful Flutter application to store, lock, and manage your memories
 ## 🚀 Getting Started
 
 1. **Clone this repo**  
-   **(→ UPDATE `<YOUR_REPO_URL>` WITH YOUR GITHUB/SHARE LINK BEFORE RELEASING)**
+   **(https://github.com/sampath970/imagelocker_application)**
 
 2. **Install dependencies**  
 
@@ -28,13 +28,12 @@ A secure, beautiful Flutter application to store, lock, and manage your memories
 
 ## 📱 Screenshots
 
-<!-- TODO: Add your screenshots in the `assets/` folder and update the image paths below -->
-<!-- EXAMPLE: -->
-<!-- ![Home](assets/screenshot_home.png) -->
-<!-- ![Lock Screen](assets/screenshot_lock.png) -->
-<!-- ![Add Memory](assets/screenshot_add.png) -->
 
-**(→ ADD YOUR ACTUAL SCREENSHOTS AND UPDATE THE SECTION ABOVE)**
+<!-- ![Home](assets/addmemory.png) -->
+<!-- ![Lock Screen](assets/homescreen.png) -->
+<!-- ![Add Memory](assets/lockscreen.png) -->
+
+
 
 ---
 
@@ -67,16 +66,13 @@ A secure, beautiful Flutter application to store, lock, and manage your memories
 
 ## 👨‍💻 Credits
 
-- Developed by: **YOUR NAME HERE**  <!-- (→ UPDATE with your name) -->
-- Contact: **YOUR EMAIL OR SITE**    <!-- (→ UPDATE with your contact) -->
+- Developed by: **Sugali Sampath Kumar Naik**  
+- Contact: **sampathkumarnaiksugali1@gmail.com**   
 - Inspired by privacy-focused memory/journaling apps
 
 ---
 
-## 📋 License
 
-[MIT License](LICENSE)  
-**(→ ADD LICENSE FILE IF OPEN SOURCE — OR REMOVE THIS LINE IF PRIVATE/NOT NEEDED)**
 
 ---
 
