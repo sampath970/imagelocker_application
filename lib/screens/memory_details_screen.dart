@@ -14,41 +14,12 @@ class MemoryDetailsScreen extends StatefulWidget {
 }
 
 class _MemoryDetailsScreenState extends State<MemoryDetailsScreen> {
-  late Duration _remaining;
-  late bool _isLocked;
   late Memory _memory;
-  late final Ticker _ticker;
 
   @override
   void initState() {
     super.initState();
     _memory = widget.memory;
-    _updateLockState();
-    _ticker = Ticker(_onTick)..start();
-  }
-
-  void _onTick(Duration elapsed) {
-    if (!mounted) return;
-    setState(() {
-      _updateLockState();
-    });
-  }
-
-  void _updateLockState() {
-    final now = DateTime.now();
-    if (_memory.lockedUntil != null && _memory.lockedUntil!.isAfter(now)) {
-      _isLocked = true;
-      _remaining = _memory.lockedUntil!.difference(now);
-    } else {
-      _isLocked = false;
-      _remaining = Duration.zero;
-    }
-  }
-
-  @override
-  void dispose() {
-    _ticker.dispose();
-    super.dispose();
   }
 
   void _deleteMemory(BuildContext context) async {
@@ -62,7 +33,7 @@ class _MemoryDetailsScreenState extends State<MemoryDetailsScreen> {
   Future<void> _shareMemory(BuildContext context) async {
     String text =
         'Memory: ${_memory.title}\nDate: ${_memory.date.toLocal().toString().split(' ')[0]}';
-    if (_isLocked) {
+    if (_memory.lockedUntil != null && _memory.lockedUntil!.isAfter(DateTime.now())) {
       text += "\n(This memory is currently locked.)";
     }
     if (_memory.imagePath != null &&
@@ -81,66 +52,70 @@ class _MemoryDetailsScreenState extends State<MemoryDetailsScreen> {
     }
   }
 
+  String _formatWithLeadingZero(int value) => value.toString().padLeft(2, '0');
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final remaining = _remaining;
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final isLocked = _memory.lockedUntil != null && _memory.lockedUntil!.isAfter(DateTime.now());
+    final remaining = isLocked
+        ? _memory.lockedUntil!.difference(DateTime.now())
+        : const Duration();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Memory Details'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            tooltip: 'Share',
-            onPressed: () => _shareMemory(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.edit),
-            tooltip: 'Edit',
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditMemoryScreen(memory: _memory),
-                ),
-              );
-              setState(() {
-                // Refresh state after editing
-                _memory = _memory;
-                _updateLockState();
-              });
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            tooltip: 'Delete',
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Delete Memory?'),
-                  content: const Text('Are you sure you want to delete this memory?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _deleteMemory(context);
-                      },
-                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+          // Only show these buttons when memory is unlocked!
+          if (!isLocked) ...[
+            IconButton(
+              icon: const Icon(Icons.share),
+              tooltip: 'Share',
+              onPressed: () => _shareMemory(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: 'Edit',
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditMemoryScreen(memory: _memory),
+                  ),
+                );
+                setState(() {}); // Refresh after editing
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              tooltip: 'Delete',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('Delete Memory?'),
+                    content: const Text('Are you sure you want to delete this memory?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _deleteMemory(context);
+                        },
+                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ]
         ],
       ),
-      body: _isLocked
+      body: isLocked
           ? Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -163,29 +138,10 @@ class _MemoryDetailsScreenState extends State<MemoryDetailsScreen> {
                   const SizedBox(height: 16),
                   Text(
                     "Will unlock in:",
-                    style: TextStyle(fontSize: 16, color: colorScheme.secondary),
+                    style: TextStyle(fontSize: 16, color: colorScheme.onSurface.withOpacity(0.6)),
                   ),
                   const SizedBox(height: 10),
-                  // Live timer, fading background
-                  Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.07),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      "${remaining.inDays}d "
-                          "${remaining.inHours % 24}h "
-                          "${remaining.inMinutes % 60}m "
-                          "${remaining.inSeconds % 60}s",
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 2,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                  ),
+                  _buildCountDown(remaining, colorScheme),
                   const SizedBox(height: 22),
                   Text(
                     "You can access this memory again\non ${_memory.lockedUntil!.toLocal().toString().split(' ')[0]}",
@@ -293,30 +249,31 @@ class _MemoryDetailsScreenState extends State<MemoryDetailsScreen> {
       ),
     );
   }
-}
 
-// Flutter foundation for the ticker:
-class Ticker {
-  Ticker(this.onTick);
+  Widget _buildCountDown(Duration remaining, ColorScheme colorScheme) {
+    final days = _formatWithLeadingZero(remaining.inDays);
+    final hours = _formatWithLeadingZero(remaining.inHours % 24);
+    final minutes = _formatWithLeadingZero(remaining.inMinutes % 60);
+    final seconds = _formatWithLeadingZero(remaining.inSeconds % 60);
 
-  final void Function(Duration) onTick;
-  late final Stopwatch _stopwatch = Stopwatch()..start();
-  bool _isActive = false;
-
-  void start() {
-    _isActive = true;
-    _tick();
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      child: Text(
+        "$days:$hours:$minutes:$seconds",
+        style: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 4,
+          color: colorScheme.primary,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    );
   }
 
-  void _tick() async {
-    while (_isActive) {
-      onTick(_stopwatch.elapsed);
-      await Future.delayed(const Duration(seconds: 1));
-    }
-  }
 
-  void dispose() {
-    _isActive = false;
-    _stopwatch.stop();
-  }
 }

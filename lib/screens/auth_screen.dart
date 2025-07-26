@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 
 class AuthScreen extends StatefulWidget {
-  final VoidCallback? onUnlock; // Enable autolock callback support
+  final VoidCallback? onUnlock; // Needed for AppLockManager, optional for others
 
   const AuthScreen({super.key, this.onUnlock});
 
@@ -24,11 +24,11 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
       bool didAuthenticate = await auth.authenticate(
-        localizedReason: 'Please authenticate to unlock memories',
+        localizedReason: 'Please authenticate to unlock your memories',
         options: const AuthenticationOptions(biometricOnly: true),
       );
       if (didAuthenticate) {
-        // Autolock integration: call onUnlock if provided
+        // Support lock manager as well as plain flow:
         widget.onUnlock?.call();
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
@@ -41,14 +41,14 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() => _isAuthenticating = false);
   }
 
+  void _navigateToPin() {
+    Navigator.pushReplacementNamed(context, '/pin');
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
-  }
-
-  void _navigateToPin() {
-    Navigator.pushReplacementNamed(context, '/pin');
   }
 
   @override

@@ -5,32 +5,38 @@ class AppLockManager extends ChangeNotifier with WidgetsBindingObserver {
   factory AppLockManager() => _instance;
   AppLockManager._internal();
 
-  bool _shouldLock = false; // Set to true when backgrounded
+  bool _shouldLock = true; // Always true on app startup.
 
   bool get shouldLock => _shouldLock;
 
-  // Call this on init in main.dart
+  void unlock() {
+    _shouldLock = false;
+    notifyListeners();
+  }
+
+  void lock() {
+    _shouldLock = true;
+    notifyListeners();
+  }
+
   void init() {
     WidgetsBinding.instance.addObserver(this);
   }
 
-  // Call this on dispose in main.dart
   void disposeManager() {
     WidgetsBinding.instance.removeObserver(this);
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.detached) {
+    // Lock on background, screen off, task switch
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       _shouldLock = true;
       notifyListeners();
     }
-  }
-
-  void unlock() {
-    _shouldLock = false;
-    notifyListeners();
+    // Ensure lock triggers *also* on resume (coming forward from recents)
+    if (state == AppLifecycleState.resumed && _shouldLock) {
+      notifyListeners();
+    }
   }
 }
