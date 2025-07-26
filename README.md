@@ -29,9 +29,9 @@ A secure, beautiful Flutter application to store, lock, and manage your memories
 ## 📱 Screenshots
 
 
-<!-- ![Home](assets/addmemory.png) -->
-<!-- ![Lock Screen](assets/homescreen.png) -->
-<!-- ![Add Memory](assets/lockscreen.png) -->
+[Home](assets/addmemory.png) 
+[Lock Screen](assets/homescreen.png) 
+[Add Memory](assets/lockscreen.png) 
 
 
 
